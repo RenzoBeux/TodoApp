@@ -1,0 +1,32 @@
+@import '../colors/colors';
+
+.login-container {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	height: 100vh;
+	background: $purple-navy;
+	h1 {
+		font-size: 2.5rem;
+		font-weight: bold;
+		margin-bottom: 1rem;
+		color: #fff;
+	}
+	a {
+		color: silver;
+	}
+	p {
+		color: white;
+	}
+}
+
+.login-input {
+	width: 100%;
+	height: 40px;
+	border-radius: 5px;
+	border: 1px solid #ccc;
+	padding: 0 10px;
+	margin-bottom: 10px;
+	background-color: #fff;
+}

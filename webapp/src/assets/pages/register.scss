@@ -1,0 +1,11 @@
+.mismatch-pass{
+    color: #f44336;
+    border: 1px solid #f44336;
+    &:active {
+        border: 1px solid #f44336;
+    }
+    &:focus-visible {
+        border: 1px solid #f44336 !important;
+        outline: double #f44336 1px;
+    }
+}
