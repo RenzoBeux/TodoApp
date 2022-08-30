@@ -48,11 +48,11 @@ public class TodoController {
             }
         } else {
             if(doneFilter.equals("all")) {
-                return ResponseEntity.ok(todoRepository.findAllByUserIdAndContains(userId, search, paging));
+                return ResponseEntity.ok(todoRepository.findAllByUserIdAndContains(userId, search.toLowerCase(), paging));
             } else if(doneFilter.equals("done")) {
-                return ResponseEntity.ok(todoRepository.findAllByUserIdAndContains(userId, search, true, paging));
+                return ResponseEntity.ok(todoRepository.findAllByUserIdAndContains(userId, search.toLowerCase(), true, paging));
             } else if(doneFilter.equals("notDone")) {
-                return ResponseEntity.ok(todoRepository.findAllByUserIdAndContains(userId, search, false, paging));
+                return ResponseEntity.ok(todoRepository.findAllByUserIdAndContains(userId, search.toLowerCase(), false, paging));
             }
         }
         return ResponseEntity.ok(todoRepository.findAllByUserId(userId, paging));
@@ -80,6 +80,17 @@ public class TodoController {
             todoToUpdate.setDone(todo.isDone());
             todoRepository.save(todoToUpdate);
             return ResponseEntity.ok(todoToUpdate);
+        } else {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable long id) {
+        Optional<Todo> todoOptional = todoRepository.findById(id);
+        if (todoOptional.isPresent()) {
+            todoRepository.delete(todoOptional.get());
+            return ResponseEntity.ok().build();
         } else {
             return ResponseEntity.badRequest().build();
         }

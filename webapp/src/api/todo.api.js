@@ -27,3 +27,12 @@ export const updateTodo = async (token, todo) => {
     return response.data;
 }
 
+export const deleteTodo = async (token, id) => {
+    const response = await axiosInstance.delete(`/todo/${id}`,{
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+    });
+    return response.data;
+}
+
