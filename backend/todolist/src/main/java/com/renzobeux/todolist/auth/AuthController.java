@@ -12,18 +12,20 @@ import com.renzobeux.todolist.user.UserRepository;
 import io.swagger.v3.oas.annotations.security.SecurityRequirements;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/auth")
@@ -39,9 +41,9 @@ public class AuthController {
     JwtUtils jwtUtils;
     @Autowired
     RefreshTokenService refreshTokenService;
-
+    @CrossOrigin(allowCredentials = "true", origins = {"https://localhost:3000"})
     @PostMapping("/signin")
-    public ResponseEntity<?> authenticateUser(@RequestBody @NotNull LoginRequest loginRequest) {
+    public ResponseEntity<?> authenticateUser(@RequestBody @NotNull LoginRequest loginRequest, HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
         SecurityContextHolder.getContext().setAuthentication(authentication);
@@ -51,6 +53,16 @@ public class AuthController {
         refreshTokenService.deleteByUserId(userDetails.getId());
 
         RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
+                .httpOnly(true)
+                .path("/")
+                .domain("localhost")
+                .secure(true)
+                .maxAge(7 * 24 * 60 * 60)
+                .sameSite("None")
+                .build();
+
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
 
         return ResponseEntity.ok(new JwtResponse(jwt,
                 refreshToken.getToken(),
@@ -58,10 +70,9 @@ public class AuthController {
                 userDetails.getUsername(),
                 userDetails.getEmail()));
     }
-
-    @PostMapping("/refreshtoken")
-    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
-        String requestRefreshToken = request.getRefreshToken();
+    @CrossOrigin(allowCredentials = "true", origins = {"https://localhost:8080, https://localhost:3000"})
+    @GetMapping("/refreshtoken")
+    public ResponseEntity<?> refreshToken(@CookieValue(name = "refreshToken", required = true) String requestRefreshToken, HttpServletResponse response) {
         return refreshTokenService.findByToken(requestRefreshToken)
                 .map(refreshTokenService::verifyExpiration)
                 .map(RefreshToken::getUser)
@@ -70,6 +81,16 @@ public class AuthController {
 //                    if token is about to expire, generate a new one
 
                     RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+                    ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken.getToken())
+                            .httpOnly(true)
+                            .path("/")
+                            .domain("localhost")
+                            .secure(true)
+                            .maxAge(7 * 24 * 60 * 60)
+                            .sameSite("None")
+                            .build();
+
+                    response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
                     return ResponseEntity.ok(
                             new JwtResponse(token,
                                     refreshToken.getToken(),
@@ -80,6 +101,30 @@ public class AuthController {
                 .orElseThrow(() -> new TokenRefreshException(requestRefreshToken,
                         "Refresh token is not in database!", -1));
     }
+
+//    LOGOUT METHOD, CLEARS COOKIES
+    @CrossOrigin(allowCredentials = "true", origins = {"https://localhost:8080, https://localhost:3000"})
+    @PostMapping("/logout")
+    public ResponseEntity<?> logoutUser(@CookieValue(name = "refreshToken", required = true) String requestRefreshToken, HttpServletResponse response) {
+        Optional<RefreshToken> refreshToken = refreshTokenService.findByToken(requestRefreshToken);
+        if (refreshToken.isPresent()) {
+            refreshTokenService.deleteByUserId(refreshToken.get().getUser().getId());
+        }
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .path("/")
+                .domain("localhost")
+                .secure(true)
+                .maxAge(0)
+                .sameSite("None")
+                .build();
+
+        response.setHeader(HttpHeaders.SET_COOKIE, cookie.toString());
+        return ResponseEntity.ok(new MessageResponse("User logged out successfully!"));
+    }
+
+
+
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signUpRequest) {

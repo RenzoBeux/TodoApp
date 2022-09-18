@@ -34,6 +34,7 @@ public class RefreshTokenService {
     }
     @Transactional
     public RefreshToken verifyExpiration(RefreshToken token) {
+        //If the token is used the TokenControllerAdvice will delete it
         if(token.getUsed()) {
             throw new TokenRefreshException(token.getToken(),"Refresh token is already used, please make a new signin request", token.getUser().getId());
         }

@@ -18,7 +18,7 @@ public class TodolistApplication {
         return new WebMvcConfigurer() {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**").allowedOrigins("*").allowedMethods("*").allowedHeaders("*");
+                registry.addMapping("/**").allowedOrigins("https://localhost:3000").allowedMethods("*").allowedHeaders("*");
             }
         };
     }

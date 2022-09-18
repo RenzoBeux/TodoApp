@@ -8,6 +8,7 @@ import {
 	setTotal,
 } from '../store/reducers/todo.reducer';
 import {
+	Button,
 	Card,
 	Checkbox,
 	Col,
@@ -102,7 +103,7 @@ export const Dashboard = () => {
 	};
 	//RETURNS a grid with 3 columns filled with todos
 	return (
-		<div>
+		<div className='back'>
 			<Navbar></Navbar>
 			<div className="container">
 				<Row gutter={[16, 16]} className="toolbox">

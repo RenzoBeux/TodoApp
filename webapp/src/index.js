@@ -7,12 +7,18 @@ import { App } from './App';
 import 'antd/dist/antd.min.css';
 import './index.scss';
 import './assets/main.scss'
+import { QueryClient, QueryClientProvider } from 'react-query';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
+// Create a client
+const queryClient = new QueryClient()
+
 root.render(
   <Provider store={store}>
     <React.StrictMode>
-      <App/>
+      <QueryClientProvider client={queryClient}>
+        <App/>
+      </QueryClientProvider>
     </React.StrictMode>
   </Provider>
 );
